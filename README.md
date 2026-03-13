@@ -1,4 +1,12 @@
+<p align="center">
+<img src="src/icon/logo-1024.png" alt="LYTOK Logo" width="250">
+</p>
 
+<p align="center">
+<img src="https://img.shields.io/badge/version-2.0.0-blue" alt="Version">
+<img src="https://img.shields.io/badge/license-Apache 2.0 | MIT-orange" alt="License">
+<img src="https://img.shields.io/badge/format-.ltk-purple" alt="Format">
+</p>
 
 # LYTOK-JS:
 
