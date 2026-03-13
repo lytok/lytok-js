@@ -1,6 +1,6 @@
 {
 	"name": "@lytok/js",
-	"version": "2.0.0",
+	"version": "2.0.2",
 	"description": "SDK oficial para el procesamiento del formato de alta densidad LYTOK",
 	"type": "module",
 	"main": "./dist/index.js",
@@ -17,7 +17,7 @@
 		"test:core": "tsx ./test/core.test.ts",
 		"test:benchmark": "tsx ./test/benchmark.test.ts",
 		"sync:bin": "node ./scripts/sync-bin.js",
-		"release": "npm run sync:bin && npm run build && npm run test:core && npm publish --access public",
+		"release": "npm run sync:bin && npm run build && npm run test:core && cd dist && npm publish --access public",
 		"prepublishOnly": "npm run build",
 		"tag": "git tag v$npm_package_version && git push origin v$npm_package_version"
 	},

@@ -1,33 +1,20 @@
 import fs from 'fs';
 import path from 'path';
-import { execSync } from 'child_process';
 
 const root = process.cwd();
 const distPath = path.join(root, 'dist');
 const binSource = path.join(root, 'bin');
 
-console.log(`\n🚀 PREPARANDO DISTRIBUCIÓN UNIFICADA LYTOK (MODO HÍBRIDO)`);
+console.log(`\n🚀 PREPARANDO DISTRIBUCIÓN FLATTENED LYTOK (MODO PUBLICACIÓN)`);
 console.log(`-----------------------------------------------------------`);
 
-// 1. Limpieza y creación de estructura
-if (fs.existsSync(distPath)) fs.rmSync(distPath, { recursive: true });
-fs.mkdirSync(path.join(distPath, 'bin'), { recursive: true });
-fs.mkdirSync(path.join(distPath, 'src'), { recursive: true });
-
-// Nombres reservados para no romper la comunicación con el binario WASM/NAPI
-const reservedNames = [
-	'parseLytok',
-	'parseBinary',
-	'stringifyLytok',
-	'stringifyBinary',
-	'LytokBinaryTag',
-	'initEngine',
-	'__wbg_init',
-	'wasm',
-].join(',');
+// 1. Asegurar estructura (NO borrar dist, tsup ya escribió ahí)
+if (!fs.existsSync(distPath)) fs.mkdirSync(distPath);
+if (!fs.existsSync(path.join(distPath, 'bin'))) fs.mkdirSync(path.join(distPath, 'bin'), { recursive: true });
+if (!fs.existsSync(path.join(distPath, 'src'))) fs.mkdirSync(path.join(distPath, 'src'), { recursive: true });
 
 /**
- * Procesa y copia binarios, ofuscando solo el pegamento JS de WASM
+ * Procesa y copia binarios
  */
 function processBinaries(source, dest) {
 	if (!fs.existsSync(source)) return;
@@ -43,20 +30,17 @@ function processBinaries(source, dest) {
 		if (stats.isDirectory()) {
 			processBinaries(srcFile, destFile);
 		} else {
-			const ext = path.extname(item).toLowerCase();
-
-			// Copia directa para todo (.node, .wasm, js, ts)	
 			fs.copyFileSync(srcFile, destFile);
 		}
 	}
 }
 
-// 2. Ejecutar procesamiento de binarios
-console.log(`📦 Procesando binarios y protegiendo lógica WASM...`);
+// 2. Ejecutar procesamiento de binarios hacia dist/bin
+console.log(`📦 Copiando binarios a dist/bin...`);
 processBinaries(binSource, path.join(distPath, 'bin'));
 
-// 3. Copiar Código Fuente (Texto Plano para generar confianza)
-console.log(`📄 Copiando lógica de orquestación y validadores...`);
+// 3. Copiar Código Fuente a dist/src
+console.log(`📄 Copiando lógica src a dist/src...`);
 const copyFolderSync = (from, to) => {
 	if (!fs.existsSync(to)) fs.mkdirSync(to, { recursive: true });
 	fs.readdirSync(from).forEach((element) => {
@@ -68,16 +52,45 @@ const copyFolderSync = (from, to) => {
 };
 copyFolderSync(path.join(root, 'src'), path.join(distPath, 'src'));
 
-// 4. Se eliminó la ofuscación selectiva del SmartReader
+// 4. Generar package.json FLATTENED para publicación
+console.log(`📝 Generando package.json aplanado en dist/`);
+const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf-8'));
 
-// 5. Copiar Archivos Necesarios (Archivos ya compilados por tsup y types por tsc)
-console.log(`📄 Finalizando empaquetado...`);
+// Modificar rutas para que apunten a la raíz del paquete publicado
+pkg.main = "./index.js";
+pkg.module = "./index.js";
+pkg.types = "./index.d.ts";
+pkg.exports = {
+  ".": {
+    "types": "./index.d.ts",
+    "browser": "./index.js",
+    "node": "./index.js",
+    "default": "./index.js"
+  }
+};
 
-['README.md', 'EULA.md', 'package.json'].forEach((file) => {
+// Eliminar scripts innecesarios en el paquete publicado
+delete pkg.scripts;
+delete pkg.devDependencies;
+
+// Ajustar el mapeo de browser si existe
+if (pkg.browser) {
+  pkg.browser = {
+    "./src/bridge.js": "./src/browser_bridge.js"
+  };
+}
+
+// El campo 'files' se puede simplificar o eliminar ya que publicaremos el contenido de dist
+pkg.files = ["*"];
+
+fs.writeFileSync(path.join(distPath, 'package.json'), JSON.stringify(pkg, null, 2));
+
+// 5. Copiar Archivos Necesarios
+console.log(`📄 Copiando README, LICENCIA y EULA a dist/`);
+['README.md', 'EULA.md', 'LICENSE'].forEach((file) => {
 	const src = path.join(root, file);
 	if (fs.existsSync(src)) fs.copyFileSync(src, path.join(distPath, file));
 });
 
-console.log(
-	`\n✅ Distribución lista. Lógica de negocio (WASM/Reader) protegida.`,
-);
+console.log(`\n✅ Distribución aplanada lista en carpeta /dist.`);
+console.log(`💡 Para publicar: cd dist && npm publish\n`);

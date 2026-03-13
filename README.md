@@ -1,6 +1,6 @@
 # LYTOK-JS:
 
-![Version](https://img.shields.io/badge/version-2.0.0-blue)
+![Version](https://img.shields.io/badge/version-2.0.2-blue)
 ![License](https://img.shields.io/badge/license-Propietary-red)
 ![Platform](https://img.shields.io/badge/platform-Node.js_|_Browser-lightgrey)
 
