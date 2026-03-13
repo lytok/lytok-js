@@ -2,9 +2,13 @@
 <img src="src/icon/logo.png" alt="LYTOK Logo" width="250">
 </p>
 
+<div align="center">
+
 ![Version](https://img.shields.io/badge/version-2.0.2-blue)
 ![License](https://img.shields.io/badge/license-Propietary-red)
 ![Platform](https://img.shields.io/badge/platform-Node.js_|_Browser-lightgrey)
+
+</div>
 
 # LYTOK-JS:
 
