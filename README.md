@@ -1,5 +1,5 @@
 <p align="center">
-<img src="src/icon/logo-1024.png" alt="LYTOK Logo" width="250">
+<img src="src/icon/logo.png" alt="LYTOK Logo" width="250">
 </p>
 
 <p align="center">
