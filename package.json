@@ -1,0 +1,69 @@
+{
+	"name": "@lytok/js",
+	"version": "2.0.0",
+	"description": "SDK oficial para el procesamiento del formato de alta densidad LYTOK",
+	"type": "module",
+	"main": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"private": false,
+	"publishConfig": {
+		"access": "public",
+		"registry": "https://registry.npmjs.org/"
+	},
+	"scripts": {
+		"dev": "tsx ./index.ts",
+		"clean": "rimraf dist",
+		"build": "tsup && node ./scripts/prepare-dist.js",
+		"test:core": "tsx ./test/core.test.ts",
+		"test:benchmark": "tsx ./test/benchmark.test.ts",
+		"sync:bin": "node ./scripts/sync-bin.js",
+		"release": "npm run sync:bin && npm run build && npm run test:core && npm publish --access public",
+		"prepublishOnly": "npm run build",
+		"tag": "git tag v$npm_package_version && git push origin v$npm_package_version"
+	},
+	"files": [
+		"dist"
+	],
+	"browser": {
+		"./src/bridge.js": "./src/browser_bridge.js",
+		"./dist/src/bridge.js": "./dist/src/browser_bridge.js"
+	},
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"browser": "./dist/index.js",
+			"node": "./dist/index.js",
+			"default": "./dist/index.js"
+		}
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/lytok/lytok-js.git"
+	},
+	"keywords": [
+		"lytok",
+		"performance",
+		"tokens",
+		"serialization",
+		"wasm",
+		"napi",
+		"ai",
+		"llm"
+	],
+	"author": "Jose Miguel Silva Castro",
+	"license": "UNLICENSED",
+	"bugs": {
+		"url": "https://github.com/lytok/lytok-js/issues"
+	},
+	"homepage": "https://github.com/lytok/lytok-js#readme",
+	"devDependencies": {
+		"@types/node": "^25.4.0",
+		"javascript-obfuscator": "^5.1.0",
+		"rimraf": "^6.1.3",
+		"shx": "^0.4.0",
+		"tiktoken": "^1.0.22",
+		"tsup": "^8.5.1",
+		"tsx": "^4.21.0",
+		"typescript": "^5.9.3"
+	}
+}

@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="es">
+	<head>
+		<meta charset="UTF-8" />
+		<title>🚀 LYTOK WASM Engine Suite</title>
+		<style>
+			body {
+				font-family: 'Segoe UI', sans-serif;
+				padding: 30px;
+				background: #0b1120;
+				color: #94a3b8;
+				max-width: 1000px;
+				margin: auto;
+			}
+			h1 {
+				color: #f8fafc;
+				font-style: italic;
+				border-bottom: 1px solid #1e293b;
+				padding-bottom: 10px;
+			}
+			.card {
+				background: #0f172a;
+				border: 1px solid #1e293b;
+				border-radius: 12px;
+				padding: 20px;
+				margin-bottom: 20px;
+				box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+			}
+			h2 {
+				font-size: 0.9rem;
+				text-transform: uppercase;
+				color: #64748b;
+				margin-top: 0;
+				letter-spacing: 0.05em;
+			}
+			.stats {
+				display: grid;
+				grid-column: 1;
+				gap: 10px;
+				margin-bottom: 15px;
+			}
+			.stat-item {
+				background: #1e293b;
+				padding: 10px;
+				border-radius: 8px;
+				font-family: monospace;
+				font-size: 0.85rem;
+			}
+			.stat-label {
+				color: #38bdf8;
+				font-weight: bold;
+			}
+			.status-ready {
+				color: #10b981;
+				font-weight: bold;
+			}
+			pre {
+				background: #020617;
+				padding: 15px;
+				border-radius: 8px;
+				color: #7ee787;
+				font-size: 0.8rem;
+				overflow-x: auto;
+				border: 1px solid #1e293b;
+				max-height: 200px;
+			}
+			.fail {
+				color: #ef4444;
+			}
+			.ok {
+				color: #10b981;
+			}
+			button {
+				background: #2563eb;
+				color: white;
+				border: none;
+				padding: 10px 20px;
+				border-radius: 6px;
+				cursor: pointer;
+				font-weight: bold;
+			}
+			button:hover {
+				background: #1d4ed8;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>🚀 LYTOK WASM Engine Suite</h1>
+
+		<div class="card">
+			<h2>Estado del Motor</h2>
+			<div id="engine-status">⏳ Inicializando WASM...</div>
+			<br />
+			<button onclick="runSuite()">Ejecutar Suite Completa</button>
+		</div>
+
+		<div id="results-container"></div>
+
+		<script type="module">
+			import { LYTOK } from '../index.js';
+
+			const sampleData = Array.from({ length: 100 }, (_, i) => ({
+				id: `L00${i}`,
+				fecha: '2025-11-20',
+				stock: 15000 + i,
+				es_importado: i % 2 === 0,
+				fabricante: { nombre: 'Industrias Z', registro: 987654321 + i },
+			}));
+
+			const schemaName = 'loteProduccion';
+
+			async function runSuite() {
+				const container = document.getElementById('results-container');
+				container.innerHTML = '';
+
+				try {
+					document.getElementById('engine-status').innerHTML =
+						'<span class="status-ready">✅ MOTOR WASM LISTO</span>';
+
+					const startBin = performance.now();
+					const binaryLtk = LYTOK.stringify(sampleData, {
+						binary: true,
+					});
+					const timeBin = (performance.now() - startBin).toFixed(3);
+
+					const startMin = performance.now();
+					const minifiedLtk = LYTOK.stringify(sampleData, {
+						binary: false,
+						format: false,
+					});
+					const timeMin = (performance.now() - startMin).toFixed(3);
+
+					const startForm = performance.now();
+					const formattedLtk = LYTOK.stringify(sampleData, {
+						binary: false,
+						format: true,
+					});
+					const timeForm = (performance.now() - startForm).toFixed(3);
+
+					const pBinStart = performance.now();
+					const parsedFromBin = LYTOK.parse(binaryLtk, { schema: schemaName });
+					const pBinTime = (performance.now() - pBinStart).toFixed(3);
+					const checkBin = validate(sampleData, parsedFromBin);
+
+					const pMinStart = performance.now();
+					const parsedFromMin = LYTOK.parse(minifiedLtk);
+					const pMinTime = (performance.now() - pMinStart).toFixed(3);
+					const checkMin = validate(sampleData, parsedFromMin);
+
+					const pFormStart = performance.now();
+					const parsedFromForm = LYTOK.parse(formattedLtk, { formatted: true });
+					const pFormTime = (performance.now() - pFormStart).toFixed(3);
+					const checkForm = validate(sampleData, parsedFromForm);
+
+					renderResult('Métrica: Serialización (JS -> WASM)', [
+						{
+							label: 'Binary Stringify',
+							val: `${timeBin}ms`,
+							size: `${binaryLtk.length} bytes`,
+						},
+						{
+							label: 'Minified Stringify',
+							val: `${timeMin}ms`,
+							size: `${minifiedLtk.length} bytes`,
+						},
+						{
+							label: 'Formatted Stringify',
+							val: `${timeForm}ms`,
+							size: `${formattedLtk.length} bytes`,
+						},
+					]);
+
+					renderResult('Métrica: Deserialización (WASM -> JS)', [
+						{ label: 'Parse (Binary)', val: `${pBinTime}ms`, status: checkBin },
+						{
+							label: 'Parse (Minified)',
+							val: `${pMinTime}ms`,
+							status: checkMin,
+						},
+						{
+							label: 'Parse (Formatted)',
+							val: `${pFormTime}ms`,
+							status: checkForm,
+						},
+					]);
+
+					const previewCard = document.createElement('div');
+					previewCard.className = 'card';
+					previewCard.innerHTML = `<h2>Preview: Formatted .ltk</h2><pre>${formattedLtk.substring(0, 1000)}...</pre>`;
+					container.appendChild(previewCard);
+				} catch (e) {
+					console.error(e);
+					document.getElementById('engine-status').innerHTML =
+						`<span class="fail">❌ ERROR: ${e.message}</span>`;
+				}
+			}
+
+			function validate(orig, parsed) {
+				if (!parsed) return '<span class="fail">NULL RESULT</span>';
+				if (orig.length !== parsed.length)
+					return `<span class="fail">LEN ERR (${parsed.length})</span>`;
+
+				const s1 = JSON.stringify(orig[0]);
+				const s2 = JSON.stringify(parsed[0]);
+				return s1 === s2
+					? '<span class="ok">INTEGRITY OK</span>'
+					: '<span class="fail">DATA DIFF</span>';
+			}
+
+			function renderResult(title, metrics) {
+				const container = document.getElementById('results-container');
+				const card = document.createElement('div');
+				card.className = 'card';
+				let html = `<h2>${title}</h2><div class="stats">`;
+				metrics.forEach((m) => {
+					html += `
+                    <div class="stat-item">
+                        <span class="stat-label">${m.label}:</span> ${m.val} 
+                        ${m.size ? `| <span class="stat-label">Size:</span> ${m.size}` : ''}
+                        ${m.status ? `| ${m.status}` : ''}
+                    </div>`;
+				});
+				html += `</div>`;
+				card.innerHTML = html;
+				container.appendChild(card);
+			}
+
+			window.runSuite = runSuite;
+		</script>
+	</body>
+</html>
