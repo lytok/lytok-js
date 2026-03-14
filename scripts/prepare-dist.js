@@ -3,43 +3,15 @@ import path from 'path';
 
 const root = process.cwd();
 const distPath = path.join(root, 'dist');
-const binSource = path.join(root, 'bin');
 
 console.log(`\n🚀 PREPARANDO DISTRIBUCIÓN FLATTENED LYTOK (MODO PUBLICACIÓN)`);
 console.log(`-----------------------------------------------------------`);
 
 // 1. Asegurar estructura (NO borrar dist, tsup ya escribió ahí)
 if (!fs.existsSync(distPath)) fs.mkdirSync(distPath);
-if (!fs.existsSync(path.join(distPath, 'bin'))) fs.mkdirSync(path.join(distPath, 'bin'), { recursive: true });
 if (!fs.existsSync(path.join(distPath, 'src'))) fs.mkdirSync(path.join(distPath, 'src'), { recursive: true });
 
-/**
- * Procesa y copia binarios
- */
-function processBinaries(source, dest) {
-	if (!fs.existsSync(source)) return;
-	if (!fs.existsSync(dest)) fs.mkdirSync(dest, { recursive: true });
-
-	const items = fs.readdirSync(source);
-
-	for (const item of items) {
-		const srcFile = path.join(source, item);
-		const destFile = path.join(dest, item);
-		const stats = fs.statSync(srcFile);
-
-		if (stats.isDirectory()) {
-			processBinaries(srcFile, destFile);
-		} else {
-			fs.copyFileSync(srcFile, destFile);
-		}
-	}
-}
-
-// 2. Ejecutar procesamiento de binarios hacia dist/bin
-console.log(`📦 Copiando binarios a dist/bin...`);
-processBinaries(binSource, path.join(distPath, 'bin'));
-
-// 3. Copiar Código Fuente a dist/src
+// 2. Copiar Código Fuente a dist/src
 console.log(`📄 Copiando lógica src a dist/src...`);
 const copyFolderSync = (from, to) => {
 	if (!fs.existsSync(to)) fs.mkdirSync(to, { recursive: true });
@@ -52,7 +24,7 @@ const copyFolderSync = (from, to) => {
 };
 copyFolderSync(path.join(root, 'src'), path.join(distPath, 'src'));
 
-// 4. Generar package.json FLATTENED para publicación
+// 3. Generar package.json FLATTENED para publicación
 console.log(`📝 Generando package.json aplanado en dist/`);
 const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf-8'));
 
@@ -85,7 +57,7 @@ pkg.files = ["*"];
 
 fs.writeFileSync(path.join(distPath, 'package.json'), JSON.stringify(pkg, null, 2));
 
-// 5. Copiar Archivos Necesarios
+// 4. Copiar Archivos Necesarios
 console.log(`📄 Copiando README, LICENCIA y EULA a dist/`);
 ['README.md', 'EULA.md', 'LICENSE'].forEach((file) => {
 	const src = path.join(root, file);

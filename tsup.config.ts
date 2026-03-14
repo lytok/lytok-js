@@ -8,7 +8,7 @@ export default defineConfig({
   clean: true,
   minify: false,
   splitting: false,
-  target: 'esnext',
+  target: 'es2022',
   outDir: 'dist',
   shims: true,
   esbuildOptions(options: any) {

@@ -1,5 +1,22 @@
-import { stringify as stringifyNative, compile, encode as encodeNative, LytokSmartReader, setCustomMap as SetCustomMapNative, resetCustomMap as ResetCustomMapNative } from './bridge.js';
+import { 
+	stringify as stringifyNative, 
+	compile, 
+	encode as encodeNative, 
+	LytokSmartReader, 
+	setCustomMap as SetCustomMapNative, 
+	resetCustomMap as ResetCustomMapNative,
+	ready as ReadyNative
+} from './bridge.js';
 import { validateIntegrity } from './utils/integrity_validator.js';
+
+/**
+ * Espera a que el motor de LYTOK esté listo.
+ * En Node.js resuelve inmediatamente. En el navegador espera a la carga del WASM.
+ * @returns {Promise<void>}
+ */
+export async function ready(): Promise<void> {
+	return ReadyNative();
+}
 
 /**
  * Serializa datos a formato LYTOK (.ltk text format).

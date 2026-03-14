@@ -95,9 +95,18 @@
 		</div>
 
 		<div id="results-container"></div>
-
+		
+		<script type="importmap">
+		{
+			"imports": {
+				"/dist/src/bridge.js": "/dist/src/browser_bridge.js",
+				"@lytok/core/": "/node_modules/@lytok/core/"
+			}
+		}
+		</script>
+		
 		<script type="module">
-			import { LYTOK } from '../index.js';
+			import { LYTOK } from '/dist/index.js';
 
 			const sampleData = Array.from({ length: 100 }, (_, i) => ({
 				id: `L00${i}`,
