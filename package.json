@@ -1,6 +1,6 @@
 {
 	"name": "@lytok/js",
-	"version": "3.0.0",
+	"version": "3.0.1",
 	"description": "SDK oficial para el procesamiento del formato de alta densidad LYTOK",
 	"type": "module",
 	"main": "./dist/index.js",
