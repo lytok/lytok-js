@@ -1,46 +1,40 @@
-name: Actualizar Sponsors
+name: Publish to NPM
+
 on:
-  schedule:
-    - cron: '0 0 * * *'
-  workflow_dispatch:
+  release:
+    types: [published]
+  push:
+    tags:
+      - 'v*'
 
 jobs:
-  sponsors:
+  publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
     steps:
-      - name: Descargar repositorio
+      - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          token: ${{ secrets.SPONSORS_TOKEN }} # Usa tu token para poder guardar los cambios
-      
-      - name: Obtener Sponsors y actualizar README
+          node-version: '20.x'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build project
+        run: npm run build
+
+      - name: Run Core Tests
+        run: npm run test:core
+
+      - name: Publish to NPM
+        run: |
+          cd dist
+          npm publish --access public
         env:
-          GH_TOKEN: ${{ secrets.SPONSORS_TOKEN }}
-        run: |
-          # 1. Consultar la API de GitHub para traer a tus patrocinadores
-          HTML_SPONSORS=$(gh api graphql -F login="joguel96" -f query='
-            query($login: String!) {
-              user(login: $login) {
-                sponsorshipsAsMaintainer(first: 100) {
-                  nodes {
-                    sponsorEntity {
-                      ... on User { login, avatarUrl }
-                      ... on Organization { login, avatarUrl }
-                    }
-                  }
-                }
-              }
-            }' --jq '[.data.user.sponsorshipsAsMaintainer.nodes[].sponsorEntity | "<a href=\"https://github.com/\(.login)\"><img src=\"\(.avatarUrl)&s=60\" width=\"60\" style=\"border-radius:50%; margin:5px;\" alt=\"\(.login)\" /></a>"] | join(" ")')
-          
-          export HTML_SPONSORS
-          
-          # 2. Insertar los avatares entre las etiquetas HTML de tu README
-          perl -0777 -pi -e 's/().*?()/$1\n$ENV{HTML_SPONSORS}\n$2/s' README.md
-          
-      - name: Guardar y subir cambios
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add README.md
-          git commit -m "chore: actualizar lista de sponsors" || echo "Sin cambios nuevos"
-          git push
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
